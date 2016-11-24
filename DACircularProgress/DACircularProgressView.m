@@ -12,13 +12,13 @@
 
 @interface DACircularProgressLayer : CALayer
 
-@property(nonatomic, strong) UIColor *trackTintColor;
-@property(nonatomic, strong) UIColor *progressTintColor;
-@property(nonatomic, strong) UIColor *innerTintColor;
-@property(nonatomic) NSInteger roundedCorners;
-@property(nonatomic) CGFloat thicknessRatio;
+@property(nonatomic, strong) UIColor *trackTintColor; ///< 进度圆的颜色 默认[[UIColor whiteColor] colorWithAlphaComponent:0.3f]]
+@property(nonatomic, strong) UIColor *progressTintColor; ///< 剩余部分圆的颜色 默认[UIColor whiteColor]
+@property(nonatomic, strong) UIColor *innerTintColor; ///< 默认nil
+@property(nonatomic) NSInteger roundedCorners; ///< 进度条的两端是否圆形 参考lineCap round 默认NO
+@property(nonatomic) CGFloat thicknessRatio; ///< 进度条占整个进度圆的比例 默认0.3f
 @property(nonatomic) CGFloat progress;
-@property(nonatomic) NSInteger clockwiseProgress;
+@property(nonatomic) NSInteger clockwiseProgress;///< 是否顺时针旋转 默认YES
 
 @end
 
@@ -32,6 +32,7 @@
 @dynamic progress;
 @dynamic clockwiseProgress;
 
+/// 进度改变redisplay 这样就可以使用[CABasicAnimation animationWithKeyPath:@"progress"];
 + (BOOL)needsDisplayForKey:(NSString *)key
 {
     if ([key isEqualToString:@"progress"]) {
@@ -45,11 +46,16 @@
 {
     CGRect rect = self.bounds;
     CGPoint centerPoint = CGPointMake(rect.size.width / 2.0f, rect.size.height / 2.0f);
+    // 半径以长宽中小的为准
     CGFloat radius = MIN(rect.size.height, rect.size.width) / 2.0f;
     
+    // 是否顺时针方向
     BOOL clockwise = (self.clockwiseProgress != 0);
     
+    // 最大进度不超过1
     CGFloat progress = MIN(self.progress, 1.0f - FLT_EPSILON);
+    
+    // 顺时针[-90,270] 逆时针[270,-90]
     CGFloat radians = 0;
     if (clockwise) {
         radians = (float)((progress * 2.0f * M_PI) - M_PI_2);
@@ -57,6 +63,8 @@
         radians = (float)(3 * M_PI_2 - (progress * 2.0f * M_PI));
     }
     
+    // 进度的圆 是个完整的圆
+    // 添加一个圆 半径为radius 角度范围[360,0] 填充颜色trackTintColor
     CGContextSetFillColorWithColor(context, self.trackTintColor.CGColor);
     CGMutablePathRef trackPath = CGPathCreateMutable();
     CGPathMoveToPoint(trackPath, NULL, centerPoint.x, centerPoint.y);
@@ -66,6 +74,8 @@
     CGContextFillPath(context);
     CGPathRelease(trackPath);
     
+    // 剩余部分的圆形 用这个圆将上面的圆遮住
+    // 添加一个圆 半径为radius 角度范围[270,radians] 填充颜色progressTintColor
     if (progress > 0.0f) {
         CGContextSetFillColorWithColor(context, self.progressTintColor.CGColor);
         CGMutablePathRef progressPath = CGPathCreateMutable();
@@ -102,6 +112,8 @@
         CGContextFillPath(context);
     }
 
+    // 内圆 通过这个较小的内圆覆盖前面的大圆来实现进度条的样式
+    // kCGBlendModeClear R=0 R is the premultiplied result
     CGContextSetBlendMode(context, kCGBlendModeClear);
     CGFloat innerRadius = radius * (1.0f - self.thicknessRatio);
     CGRect clearRect = (CGRect) {
@@ -113,6 +125,7 @@
     CGContextAddEllipseInRect(context, clearRect);
     CGContextFillPath(context);
 
+    // 内圆的填充颜色
     if (self.innerTintColor) {
         CGContextSetBlendMode(context, kCGBlendModeNormal);
         CGContextSetFillColorWithColor(context, [self.innerTintColor CGColor]);
@@ -192,6 +205,7 @@
        initialDelay:(CFTimeInterval)initialDelay
 {
     CGFloat pinnedProgress = MIN(MAX(progress, 0.0f), 1.0f);
+    // duration 0-1
     [self setProgress:progress
              animated:animated
          initialDelay:initialDelay
@@ -223,6 +237,8 @@
     }
 }
 
+/// 通过Layer的needsDisplayForKey方法返回YES来使progress变成可动画的
+/// 但是animation.fillMode = kCAFillModeForwards;仍然无效 所以这边需要处理
 - (void)animationDidStop:(CAAnimation *)animation finished:(BOOL)flag
 {
    NSNumber *pinnedProgressNumber = [animation valueForKey:@"toValue"];
@@ -287,6 +303,7 @@
     [self.circularProgressLayer setNeedsDisplay];
 }
 
+/// 无限旋转 大于0顺时针旋转 小于0逆时针旋转
 - (NSInteger)indeterminate
 {
     CAAnimation *spinAnimation = [self.layer animationForKey:@"indeterminateAnimation"];

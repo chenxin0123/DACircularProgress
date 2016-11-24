@@ -27,7 +27,7 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    
+    self.view.backgroundColor = [UIColor purpleColor];
     self.progressView = [[DACircularProgressView alloc] initWithFrame:CGRectMake(140.0f, 50.0f, 40.0f, 40.0f)];
     self.progressView.roundedCorners = YES;
     self.progressView.trackTintColor = [UIColor clearColor];
@@ -37,8 +37,8 @@
     [self.view addSubview:self.largeProgressView];
     
     self.largestProgressView.trackTintColor = [UIColor blackColor];
-    self.largestProgressView.progressTintColor = [UIColor yellowColor];
-    self.largestProgressView.thicknessRatio = 1.0f;
+    self.largestProgressView.progressTintColor = [UIColor colorWithRed:0 green:1 blue:0 alpha:1];
+    self.largestProgressView.thicknessRatio = 0.10f;
     self.largestProgressView.clockwiseProgress = NO;
     
     // Labeled progress views

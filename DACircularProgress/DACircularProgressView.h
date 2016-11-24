@@ -18,8 +18,8 @@
 @property(nonatomic) NSInteger clockwiseProgress UI_APPEARANCE_SELECTOR; // Can not use BOOL with UI_APPEARANCE_SELECTOR :-(
 @property(nonatomic) CGFloat progress;
 
-@property(nonatomic) CGFloat indeterminateDuration UI_APPEARANCE_SELECTOR;
-@property(nonatomic) NSInteger indeterminate UI_APPEARANCE_SELECTOR; // Can not use BOOL with UI_APPEARANCE_SELECTOR :-(
+@property(nonatomic) CGFloat indeterminateDuration UI_APPEARANCE_SELECTOR; // 默认2
+@property(nonatomic) NSInteger indeterminate UI_APPEARANCE_SELECTOR; // 默认NO Can not use BOOL with UI_APPEARANCE_SELECTOR :-(
 
 - (void)setProgress:(CGFloat)progress animated:(BOOL)animated;
 - (void)setProgress:(CGFloat)progress animated:(BOOL)animated initialDelay:(CFTimeInterval)initialDelay;
